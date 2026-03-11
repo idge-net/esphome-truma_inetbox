@@ -2,6 +2,10 @@
 #include "LinBusListener.h"
 #include "esphome/core/log.h"
 #include "soc/uart_reg.h"
+// Force UART event queue support (required for LIN bus byte-level access)
+#ifndef USE_UART_WAKE_LOOP_ON_RX
+#define USE_UART_WAKE_LOOP_ON_RX
+#endif
 #ifdef CUSTOM_ESPHOME_UART
 #include "esphome/components/uart/truma_uart_component_esp_idf.h"
 #define ESPHOME_UART uart::truma_IDFUARTComponent
@@ -33,7 +37,7 @@ void LinBusListener::setup_framework() {
   uart_intr.rx_timeout_thresh =
       10;  // UART_TOUT_THRESH_DEFAULT,  //10 works well for my short messages I need send/receive
   uart_intr.txfifo_empty_intr_thresh = 10;  // UART_EMPTY_THRESH_DEFAULT
-  uart_intr_config(uart_num, &uart_intr);
+  uart_intr_config((uart_port_t)uart_num, &uart_intr);
 
   // Creating UART event Task
   xTaskCreatePinnedToCore(LinBusListener::uartEventTask_,
